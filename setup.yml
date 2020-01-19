@@ -19,6 +19,7 @@
     - matrix-bridge-mx-puppet-skype
     - matrix-bridge-mx-puppet-discord
     - matrix-synapse
+    - matrix-bot-maubot
     - matrix-riot-web
     - matrix-jitsi
     - matrix-ma1sd
