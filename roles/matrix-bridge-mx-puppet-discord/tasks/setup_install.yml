@@ -8,12 +8,30 @@
       The matrix-bridge-mx-puppet-discord role needs to execute before the matrix-synapse role.
   when: "matrix_synapse_role_executed|default(False)"
 
-- name: Ensure MX Puppet Discord image is pulled
+- name: Create temporary directory for checkout
+  tempfile:
+    state: directory
+  register: clone_dir
+
+- name: Clone the mx-puppet-discord repo
+  git:
+    repo: https://github.com/matrix-discord/mx-puppet-discord
+    dest: "{{ clone_dir.path }}"
+
+- name: Build the mx-puppet-slack image
   docker_image:
+    build:
+      path: "{{ clone_dir.path }}"
+      pull: yes
     name: "{{ matrix_mx_puppet_discord_docker_image }}"
-    source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
-    force_source: "{{ matrix_mx_puppet_discord_docker_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
-    force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else matrix_mx_puppet_discord_docker_image_force_pull }}"
+    source: build
+
+- name: use the registered var and the file module to remove the temporary file
+  file:
+    path: "{{ tempfile_1.path }}"
+    state: absent
+    recurse: yes
+  when: tempfile_1.path is defined
 
 - name: Ensure MX Puppet Discord paths exist
   file:

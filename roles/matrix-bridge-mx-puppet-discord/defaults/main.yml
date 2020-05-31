@@ -3,8 +3,7 @@
 
 matrix_mx_puppet_discord_enabled: true
 
-# See: https://mau.dev/tulir/mx-puppet-discord/container_registry
-matrix_mx_puppet_discord_docker_image: "dangersalad/mx-puppet-discord:latest"
+matrix_mx_puppet_discord_docker_image: "mx-puppet-discord"
 matrix_mx_puppet_discord_docker_image_force_pull: "{{ matrix_mx_puppet_discord_docker_image.endswith(':latest') }}"
 
 matrix_mx_puppet_discord_base_path: "{{ matrix_base_data_path }}/mx-puppet-discord"
@@ -37,6 +36,7 @@ matrix_mx_puppet_discord_systemd_wanted_services_list: []
 
 matrix_mx_puppet_discord_appservice_token: ''
 matrix_mx_puppet_discord_homeserver_token: ''
+matrix_mx_puppet_slack_namespace_prefix: '_discordpuppet_'
 
 # Can be set to enable automatic double-puppeting via Shared Secret Auth (https://github.com/devture/matrix-synapse-shared-secret-auth).
 matrix_mx_puppet_discord_login_shared_secret: ''
@@ -61,13 +61,13 @@ matrix_mx_puppet_discord_configuration_yaml: |
     # shared secret for double puppeting
     loginSharedSecretMap:
       {{ matrix_mx_puppet_discord_homeserver_domain }}: {{ matrix_mx_puppet_discord_login_shared_secret|to_json }}
-  
+
   presence:
     # Bridge Discord online/offline status
     enabled: true
     # How often to send status to the homeserver in milliseconds
     interval: 500
-  
+
   provisioning:
     # Regex of Matrix IDs allowed to use the puppet bridge
     whitelist:
@@ -83,7 +83,7 @@ matrix_mx_puppet_discord_configuration_yaml: |
       #- "@user:server\\.com"
       # Disallow users on a specific homeserver
       #- "@.*:yourserver\\.com"
-  
+
   database:
     # Use Postgres as a database backend
     # If set, will be used instead of SQLite3
@@ -94,35 +94,16 @@ matrix_mx_puppet_discord_configuration_yaml: |
     # Use SQLite3 as a database backend
     # The name of the database file
     filename: /data/mx-puppet-discord.db
-  
+
   logging:
     # Log level of console output
     # Allowed values starting with most verbose:
     # silly, verbose, info, warn, error
     console: info
     # Date and time formatting
-    lineDateFormat: MMM-D HH:mm:ss.SSS
-    # Logging files
-    # Log files are rotated daily by default
-    files:
-      # Log file path
-      - file: "bridge.log"
-        # Log level for this file
-        # Allowed values starting with most verbose:
-        # silly, debug, verbose, info, warn, error
-        level: info
-        # Date and time formatting
-        datePattern: YYYY-MM-DD
-        # Maximum number of logs to keep.
-        # This can be a number of files or number of days.
-        # If using days, add 'd' as a suffix
-        maxFiles: 14d
-        # Maximum size of the file after which it will rotate. This can be a
-        # number of bytes, or units of kb, mb, and gb. If using the units, add
-        # 'k', 'm', or 'g' as the suffix
-        maxSize: 50m
-  
-  
+    lineDateFormat: ''
+
+
 matrix_mx_puppet_discord_configuration_extension_yaml: |
   # Your custom YAML configuration goes here.
   # This configuration extends the default starting configuration (`matrix_mx_puppet_discord_configuration_yaml`).
@@ -139,18 +120,19 @@ matrix_mx_puppet_discord_configuration_extension: "{{ matrix_mx_puppet_discord_c
 matrix_mx_puppet_discord_configuration: "{{ matrix_mx_puppet_discord_configuration_yaml|from_yaml|combine(matrix_mx_puppet_discord_configuration_extension, recursive=True) }}"
 
 matrix_mx_puppet_discord_registration_yaml: |
-  id: discord
   as_token: "{{ matrix_mx_puppet_discord_appservice_token }}"
   hs_token: "{{ matrix_mx_puppet_discord_homeserver_token }}"
+  id: mx-puppet-discord
   namespaces:
-      users:
+    users:
       - exclusive: true
-        regex: '^@discord_.+:{{ matrix_mx_puppet_discord_homeserver_domain|regex_escape }}$'
-      aliases:
+        regex: '@{{ matrix_mx_puppet_slack_namespace_prefix }}.*:{{ matrix_mx_puppet_discord_homeserver_domain|regex_escape }}'
+    rooms: []
+    aliases:
       - exclusive: true
-        regex: '^#discord_.+:{{ matrix_mx_puppet_discord_homeserver_domain|regex_escape }}$'
+        regex: '#{{ matrix_mx_puppet_slack_namespace_prefix }}.*:{{ matrix_mx_puppet_discord_homeserver_domain|regex_escape }}'
   url: {{ matrix_mx_puppet_discord_appservice_address }}
-  sender_localpart: discordbot
+  sender_localpart: {{ matrix_mx_puppet_slack_namespace_prefix }}bot
   rate_limited: false
 
 matrix_mx_puppet_discord_registration: "{{ matrix_mx_puppet_discord_registration_yaml|from_yaml }}"
