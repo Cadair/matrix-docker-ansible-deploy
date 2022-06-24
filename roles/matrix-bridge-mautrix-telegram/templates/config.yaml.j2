@@ -13,7 +13,7 @@ homeserver:
 # Changing these values requires regeneration of the registration.
 appservice:
     # The address that the homeserver can use to connect to this appservice.
-    address: {{ matrix_mautrix_telegram_appservice_address }}
+    address: {{ matrix_mautrix_telegram_appservice_address|to_json }}
 
     # The hostname and port where this appservice should listen.
     hostname: 0.0.0.0
@@ -27,19 +27,19 @@ appservice:
     # Format examples:
     #   SQLite:   sqlite:///filename.db
     #   Postgres: postgres://username:password@hostname/dbname
-    database: sqlite:////data/mautrix-telegram.db
+    database: {{ matrix_mautrix_telegram_appservice_database|to_json }}
 
     # Public part of web server for out-of-Matrix interaction with the bridge.
     # Used for things like login if the user wants to make sure the 2FA password isn't stored in
     # the HS database.
     public:
         # Whether or not the public-facing endpoints should be enabled.
-        enabled: true
+        enabled: {{ matrix_mautrix_telegram_appservice_public_enabled|to_json }}
         # The prefix to use in the public-facing endpoints.
-        prefix: {{ matrix_mautrix_telegram_public_endpoint }}
+        prefix: {{ matrix_mautrix_telegram_public_endpoint|to_json }}
         # The base URL where the public-facing endpoints are available. The prefix is not added
         # implicitly.
-        external: {{ matrix_mautrix_telegram_appservice_public_external }}
+        external: {{ matrix_mautrix_telegram_appservice_public_external|to_json }}
 
     # Provisioning API part of the web server for automated portal creation and fetching information.
     # Used by things like Dimension (https://dimension.t2bot.io/).
@@ -55,27 +55,30 @@ appservice:
     # The unique ID of this appservice.
     id: telegram
     # Username of the appservice bot.
-    bot_username: telegrambot
+    bot_username: {{ matrix_mautrix_telegram_appservice_bot_username|to_json }}
     # Display name and avatar for bot. Set to "remove" to remove display name/avatar, leave empty
     # to leave display name/avatar as-is.
     bot_displayname: Telegram bridge bot
     bot_avatar: mxc://maunium.net/tJCRmUyJDsgRNgqhOgoiHWbX
 
     # Authentication tokens for AS <-> HS communication.
-    as_token: "{{ matrix_mautrix_telegram_appservice_token }}"
-    hs_token: "{{ matrix_mautrix_telegram_homeserver_token }}"
+    as_token: {{ matrix_mautrix_telegram_appservice_token|to_json }}
+    hs_token: {{ matrix_mautrix_telegram_homeserver_token|to_json }}
 
 # Bridge config
 bridge:
     # Localpart template of MXIDs for Telegram users.
     # {userid} is replaced with the user ID of the Telegram user.
-    username_template: "telegram_{userid}"
+    # Default: telegram_{userid}
+    username_template: {{ matrix_mautrix_telegram_username_template|to_json }}
     # Localpart template of room aliases for Telegram portal rooms.
     # {groupname} is replaced with the name part of the public channel/group invite link ( https://t.me/{} )
-    alias_template: "telegram_{groupname}"
+    # Default: telegram_{groupname}
+    alias_template: {{ matrix_mautrix_telegram_alias_template|to_json }}
     # Displayname template for Telegram users.
     # {displayname} is replaced with the display name of the Telegram user.
-    displayname_template: "{displayname} (Telegram)"
+    # Default: {displayname} (Telegram)
+    displayname_template: {{ matrix_mautrix_telegram_displayname_template|to_json }}
 
     # Set the preferred order of user identifiers which to use in the Matrix puppet display name.
     # In the (hopefully unlikely) scenario that none of the given keys are found, the numeric user
@@ -157,7 +160,7 @@ bridge:
     parallel_file_transfer: false
     # Whether or not created rooms should have federation enabled.
     # If false, created portal rooms will never be federated.
-    federate_rooms: true
+    federate_rooms: {{ matrix_mautrix_telegram_federate_rooms|to_json }}
     # Settings for converting animated stickers.
     animated_sticker:
         # Format to which animated stickers should be converted.
@@ -221,17 +224,6 @@ bridge:
         # e.g. if bridge_notices.default is false, notices from other users will not be bridged, but
         #      notices from users listed here will be bridged.
         exceptions: []
-
-    # Some config options related to Telegram message deduplication.
-    # The default values are usually fine, but some debug messages/warnings might recommend you
-    # change these.
-    deduplication:
-        # Whether or not to check the database if the message about to be sent is a duplicate.
-        pre_db_check: false
-        # The number of latest events to keep when checking for duplicates.
-        # You might need to increase this on high-traffic bridge instances.
-        cache_queue_length: 20
-
 
     # The formats to use when sending messages to Telegram via the relay bot.
     #
@@ -330,10 +322,10 @@ bridge:
 # Telegram config
 telegram:
     # Get your own API keys at https://my.telegram.org/apps
-    api_id: {{ matrix_mautrix_telegram_api_id }}
-    api_hash: {{ matrix_mautrix_telegram_api_hash }}
+    api_id: {{ matrix_mautrix_telegram_api_id|to_json }}
+    api_hash: {{ matrix_mautrix_telegram_api_hash|to_json }}
     # (Optional) Create your own bot at https://t.me/BotFather
-    bot_token: {{ matrix_mautrix_telegram_bot_token }}
+    bot_token: {{ matrix_mautrix_telegram_bot_token|to_json }}
 
     # Telethon connection options.
     connection:

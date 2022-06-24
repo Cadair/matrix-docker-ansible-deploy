@@ -3,7 +3,7 @@
 By default, this playbook retrieves and auto-renews free SSL certificates from [Let's Encrypt](https://letsencrypt.org/) for the domains it needs (`matrix.<your-domain>` and possibly `element.<your-domain>`)
 
 Those certificates are used when configuring the nginx reverse proxy installed by this playbook.
-They can also be used for configuring [your own webserver](docs/configuring-playbook-own-webserver.md), in case you're not using the integrated nginx server provided by the playbook.
+They can also be used for configuring [your own webserver](configuring-playbook-own-webserver.md), in case you're not using the integrated nginx server provided by the playbook.
 
 If you need to retrieve certificates for other domains (e.g. your base domain) or more control over certificate retrieval, read below.
 
@@ -13,7 +13,7 @@ Things discussed in this document:
 
 - [Using your own SSL certificates](#using-your-own-ssl-certificates), if you don't want to or can't use Let's Encrypt certificates, but are still interested in using the integrated nginx reverse proxy server
 
-- [Not bothering with SSL certificates](#not-bothering-with-ssl-certificates), if you're using [your own webserver](docs/configuring-playbook-own-webserver.md) and would rather this playbook leaves SSL certificate management to you
+- [Not bothering with SSL certificates](#not-bothering-with-ssl-certificates), if you're using [your own webserver](configuring-playbook-own-webserver.md) and would rather this playbook leaves SSL certificate management to you
 
 - [Obtaining SSL certificates for additional domains](#obtaining-ssl-certificates-for-additional-domains), if you'd like to host additional domains on the Matrix server and would like the playbook to help you obtain and renew certificates for those domains automatically
 
@@ -28,6 +28,8 @@ If self-signed certificates are alright with you, you can ask the playbook to ge
 matrix_ssl_retrieval_method: self-signed
 ```
 
+If you get a `Cannot reach homeserver` error in Element, you will have to visit `https://matrix.<your-domain>` in your browser and agree to the certificate exception before you can login.
+
 
 ## Using your own SSL certificates
 
@@ -41,6 +43,7 @@ With such a configuration, the playbook would expect you to drop the SSL certifi
 
 - `<matrix_ssl_config_dir_path>/live/<domain>/fullchain.pem`
 - `<matrix_ssl_config_dir_path>/live/<domain>/privkey.pem`
+- `<matrix_ssl_config_dir_path>/live/<domain>/chain.pem`
 
 where `<domain>` refers to the domains that you need (usually `matrix.<your-domain>` and `element.<your-domain>`).
 
@@ -64,21 +67,25 @@ By default, it obtains certificates for:
 - `matrix.<your-domain>` (`matrix_server_fqn_matrix`)
 - possibly for `element.<your-domain>`, unless you have disabled the [Element client component](configuring-playbook-client-element.md) using `matrix_client_element_enabled: false`
 - possibly for `riot.<your-domain>`, if you have explicitly enabled Riot to Element redirection (for background compatibility) using `matrix_nginx_proxy_proxy_riot_compat_redirect_enabled: true`
+- possibly for `hydrogen.<your-domain>`, if you have explicitly [set up Hydrogen client](configuring-playbook-client-hydrogen.md).
+- possibly for `cinny.<your-domain>`, if you have explicitly [set up Cinny client](configuring-playbook-client-cinny.md).
 - possibly for `dimension.<your-domain>`, if you have explicitly [set up Dimension](configuring-playbook-dimension.md).
+- possibly for `goneb.<your-domain>`, if you have explicitly [set up Go-NEB bot](configuring-playbook-bot-go-neb.md).
+- possibly for `jitsi.<your-domain>`, if you have explicitly [set up Jitsi](configuring-playbook-jitsi.md).
+- possibly for `stats.<your-domain>`, if you have explicitly [set up Grafana](configuring-playbook-prometheus-grafana.md).
+- possibly for `sygnal.<your-domain>`, if you have explicitly [set up Sygnal](configuring-playbook-sygnal.md).
 - possibly for your base domain (`<your-domain>`), if you have explicitly configured [Serving the base domain](configuring-playbook-base-domain-serving.md)
 
 If you are hosting other domains on the Matrix machine, you can make the playbook obtain and renew certificates for those other domains too.
 To do that, simply define your own custom configuration like this:
 
 ```yaml
-# Note: we need to explicitly list the aforementioned Matrix domains that you use (Matrix, Element, Dimension).
-# In this example, we retrieve an extra certificate - one for the base domain (in the `matrix_domain` variable).
+# In this example, we retrieve 2 extra certificates,
+# one for the base domain (in the `matrix_domain` variable) and one for a hardcoded domain.
 # Adding any other additional domains (hosted on the same machine) is possible.
-matrix_ssl_domains_to_obtain_certificates_for:
-  - '{{ matrix_server_fqn_matrix }}'
-  - '{{ matrix_server_fqn_element }}'
-  - '{{ matrix_server_fqn_dimension }}'
+matrix_ssl_additional_domains_to_obtain_certificates_for:
   - '{{ matrix_domain }}'
+  - 'another.domain.example.com'
 ```
 
 After redefining `matrix_ssl_domains_to_obtain_certificates_for`, to actually obtain certificates you should:
@@ -87,9 +94,18 @@ After redefining `matrix_ssl_domains_to_obtain_certificates_for`, to actually ob
 
 - re-run the SSL part of the playbook and restart all services: `ansible-playbook -i inventory/hosts setup.yml --tags=setup-ssl,start`
 
-The certificate files would be available in `/matrix/ssl/config/live/<your-other-domain>/...`.
+The certificate files would be made available in `/matrix/ssl/config/live/<your-other-domain>/...`.
 
 For automated certificate renewal to work, each port `80` vhost for each domain you are obtaining certificates for needs to forward requests for `/.well-known/acme-challenge` to the certbot container we use for renewal.
 
 See how this is configured for the `matrix.` subdomain in `/matrix/nginx-proxy/conf.d/matrix-synapse.conf`
-Don't be alarmed if the above configuraiton file says port `8080`, instead of port `80`. It's due to port mapping due to our use of containers.
+Don't be alarmed if the above configuration file says port `8080`, instead of port `80`. It's due to port mapping due to our use of containers.
+
+
+## Specify the SSL private key algorithm
+
+If you'd like to [specify the private key type](https://eff-certbot.readthedocs.io/en/stable/using.html#using-ecdsa-keys) used with Let's Encrypt, define your own custom configuration like this:
+
+```yaml
+matrix_ssl_lets_encrypt_key_type: ecdsa
+```

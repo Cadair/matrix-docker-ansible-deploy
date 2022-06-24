@@ -2,6 +2,8 @@
 
 The playbook can install and configure [matrix-appservice-webhooks](https://github.com/turt2live/matrix-appservice-webhooks) for you.
 
+Note: This bridge is no longer maintained. While not a 1:1 replacement, the bridge's author suggests taking a look at [matrix-hookshot](https://github.com/Half-Shot/matrix-hookshot) as a replacement, which can also be installed using [this playbook](configuring-playbook-bridge-hookshot.md).
+
 This bridge provides support for Slack-compatible webhooks.
 
 Setup Instructions:
@@ -45,7 +47,7 @@ matrix_appservice_webhooks_log_level: '<log_level>'
     "text": "Hello world!",
     "format": "plain",
     "displayName": "My Cool Webhook",
-    "avatarUrl": "http://i.imgur.com/IDOBtEJ.png"
+    "avatar_url": "http://i.imgur.com/IDOBtEJ.png"
 }
 ```
 
@@ -57,7 +59,7 @@ curl --header "Content-Type: application/json" \
 "text": "Hello world!",
 "format": "plain",
 "displayName": "My Cool Webhook",
-"avatarUrl": "http://i.imgur.com/IDOBtEJ.png"
+"avatar_url": "http://i.imgur.com/IDOBtEJ.png"
 }' \
 <the link you've gotten in 5.>
 ```

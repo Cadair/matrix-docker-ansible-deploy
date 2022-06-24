@@ -1,17 +1,38 @@
 # Setting up Mautrix Facebook (optional)
 
-The playbook can install and configure [mautrix-facebook](https://github.com/tulir/mautrix-facebook) for you.
+The playbook can install and configure [mautrix-facebook](https://github.com/mautrix/facebook) for you.
 
-See the project's [documentation](https://github.com/tulir/mautrix-facebook/wiki#usage) to learn what it does and why it might be useful to you.
+See the project's [documentation](https://github.com/mautrix/facebook/blob/master/ROADMAP.md) to learn what it does and why it might be useful to you.
 
 ```yaml
 matrix_mautrix_facebook_enabled: true
 ```
 
+There are some additional things you may wish to configure about the bridge before you continue.
+
+Encryption support is off by default. If you would like to enable encryption, add the following to your `vars.yml` file:
+```yaml
+matrix_mautrix_facebook_configuration_extension_yaml: |
+  bridge:
+    encryption:
+      allow: true
+      default: true
+```
+
+If you would like to be able to administrate the bridge from your account it can be configured like this:
+```yaml
+matrix_mautrix_facebook_configuration_extension_yaml: |
+  bridge:
+    permissions:
+      '@YOUR_USERNAME:YOUR_DOMAIN': admin
+```
+
+You may wish to look at `roles/matrix-bridge-mautrix-facebook/templates/config.yaml.j2` to find other things you would like to configure.
+
 
 ## Set up Double Puppeting
 
-If you'd like to use [Double Puppeting](https://github.com/tulir/mautrix-facebook/wiki/Authentication#double-puppeting) (hint: you most likely do), you have 2 ways of going about it.
+If you'd like to use [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) (hint: you most likely do), you have 2 ways of going about it.
 
 ### Method 1: automatically, by enabling Shared Secret Auth
 
@@ -42,38 +63,11 @@ https://matrix.DOMAIN/_matrix/client/r0/login
 
 You then need to start a chat with `@facebookbot:YOUR_DOMAIN` (where `YOUR_DOMAIN` is your base domain, not the `matrix.` domain).
 
-Send `login YOUR_FACEBOOK_EMAIL_ADDRESS YOUR_FACEBOOK_PASSWORD` to the bridge bot to enable bridging for your Facebook/Messenger account.
-
-You can learn more here about authentication from the bridge's [official documentation on Authentication](https://github.com/tulir/mautrix-facebook/wiki/Authentication).
+Send `login YOUR_FACEBOOK_EMAIL_ADDRESS` to the bridge bot to enable bridging for your Facebook Messenger account. You can learn more here about authentication from the bridge's [official documentation on Authentication](https://docs.mau.fi/bridges/python/facebook/authentication.html).
 
 If you run into trouble, check the [Troubleshooting](#troubleshooting) section below.
 
 After successfully enabling bridging, you may wish to [set up Double Puppeting](#set-up-double-puppeting), if you haven't already done so.
-
-
-## Set up community-grouping
-
-This is an **optional feature** that you may wish to enable.
-
-The Facebook bridge can create a Matrix community for you, which would contain all your chats and contacts.
-
-For this to work, the bridge's bot needs to have permissions to create communities (also referred to as groups).
-Since the bot is a non-admin user, you need to enable such group-creation for non-privileged users in [Synapse's settings](configuring-playbook-synapse.md).
-
-Here's an example configuration:
-
-```yaml
-matrix_synapse_configuration_extension_yaml: |
-  enable_group_creation: true
-  group_creation_prefix: "unofficial/"
-
-matrix_mautrix_facebook_configuration_extension_yaml: |
-  bridge:
-    community_template: "unofficial/facebook_{localpart}={server}"
-```
-
-Once the bridge is restarted, it would create a community and invite you to it. You need to accept the community invitation manually.
-If you don't see all your contacts, you may wish to send a `sync` message to the bot.
 
 
 ## Troubleshooting
