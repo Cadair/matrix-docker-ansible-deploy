@@ -26,6 +26,7 @@
     - matrix-bridge-mautrix-googlechat
     - matrix-bridge-mautrix-instagram
     - matrix-bridge-mautrix-signal
+    - matrix-bridge-mautrix-slack
     - matrix-bridge-mautrix-telegram
     - matrix-bridge-mautrix-whatsapp
     - matrix-bridge-mautrix-discord
